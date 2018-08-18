@@ -9,8 +9,10 @@ import {
   LayoutAnimation,
   UIManager
 } from "react-native";
+import Toast, { DURATION } from "react-native-easy-toast";
 import UserInput from "../components/UserInput";
 import Heading from "../components/Heading";
+
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
 export default class Login extends Component {
@@ -24,13 +26,26 @@ export default class Login extends Component {
       submitting: false
     };
   }
-
   onSubmit() {
     this.setState({ submitting: true });
-    // Login
+    var data = {
+      email: this.state.email,
+      password: this.state.password
+    };
+
     if (this.state.currentPage === "Login") {
+      if (this.validateEmail() && !this.validatePassword()) {
+        this.refs.toast.show("Logged in successfully", 100);
+      }
     } else {
-      // SignUp
+      if (
+        this.validateEmail() &&
+        !this.validatePassword() &&
+        !this.validateName() &&
+        !this.validateConfirmPassword()
+      ) {
+        this.refs.toast.show("User registered successfully", 100);
+      }
     }
   }
   onChangeText(key, value) {
@@ -46,14 +61,18 @@ export default class Login extends Component {
   validateConfirmPassword() {
     return this.state.password !== this.state.confirmPassword;
   }
-  onPress(currentPage) {
-    LayoutAnimation.easeInEaseOut();
+  resetState(currentPage) {
     this.setState({
       currentPage,
       email: "",
       password: "",
-      confirmPassword: ""
+      confirmPassword: "",
+      submitting: false
     });
+  }
+  onPress(currentPage) {
+    this.resetState(currentPage);
+    LayoutAnimation.easeInEaseOut();
   }
   render() {
     return (
@@ -87,13 +106,14 @@ export default class Login extends Component {
             }}
             value={this.state.email}
           />
+
           <UserInput
             secureTextEntry={true}
             iconName="ios-lock-outline"
             placeholder="Password:"
             errorText={
               this.state.submitting && this.validatePassword()
-                ? "Invalid Password"
+                ? "Password must contain atlest 6 character"
                 : ""
             }
             onChangeText={value => {
@@ -101,6 +121,7 @@ export default class Login extends Component {
             }}
             value={this.state.password}
           />
+
           {this.state.currentPage !== "Login" ? (
             <UserInput
               secureTextEntry={true}
@@ -128,6 +149,7 @@ export default class Login extends Component {
             </Text>
           </TouchableOpacity>
         </Animated.View>
+        <Toast ref="toast" />
       </ImageBackground>
     );
   }
